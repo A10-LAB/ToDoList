@@ -16,14 +16,21 @@ app.use(express.static("public"));
 // DB Connection
 mongoose.connect("mongodb://localhost:27017/todolistDB", { useNewUrlParser: true, useUnifiedTopology: true });
 
-// DB Schema
+// DB Schemes
 const itemSchema = 
 {
   name: String,
 }
 
-// DB Model 
+const listSchema = 
+{
+  name: String,
+  items: [itemSchema]
+}
+
+// DB Models 
 const Item = mongoose.model("Item", itemSchema);
+const List = mongoose.model("List", listSchema);
 
 // DB Documents
 const item1 = new Item 
@@ -58,7 +65,7 @@ app.get("/", function(req, res)
       else 
       {console.log("/// DB Insert Done ///")};  
     });
-    // Redirect for Array Items Appear in Browser
+    // Redirect для массива Items чтобы появились в браузере.
     res.redirect("/");
     }
     else 
@@ -72,17 +79,18 @@ app.post("/", function(req, res)
 {
   const itemName = req.body.newItem;
   
-  // Post DB Documen based on req.body
+  // Post DB Document based on req.body
   const item = new Item 
   ({
     name: itemName
 }); 
-// Mongoose short save method
+// Mongoose короткий метод сохранения
 item.save();
-// Redirection to root to show new post
+// Redirection to root to show new post иначе не сработает
 res.redirect("/"); 
 });
 
+// Deleted Page 
 app.post("/delete", function(req, res)
 {
   const checkedItemID = req.body.checkbox;
@@ -101,11 +109,41 @@ Item.findByIdAndRemove(checkedItemID, function(err)
 });  
 });
 
-app.get("/work", function(req,res)
+// Проверка если страница существует
+app.get("/:customListName", function(req,res)
 {
-  res.render("list", {listTitle: "Work List", newListItems: workItems});
+  const customListName = req.params.customListName;
+  
+  List.findOne({name: customListName}, function(err, foundList)
+  {
+    if(!err)
+    {
+      if(!foundList)
+      {
+        // Create new list
+        const list = new List
+        ({
+          name: customListName,
+          items: defaultArray
+        });
+        list.save();
+        // Redirect для того, чтобы отображалось в браузере. Сыылка идет не на root, а на CustomListName, который определяется как переменная через const выше
+        res.redirect("/" + customListName);
+      }
+      else
+      {
+        // Show existing List. Код добавляет созданное пользователем 
+        // название страницы в качестве заголовка (listTitle) и меняет его 
+        // на найденное имя через метод foundList,
+        // NewListItems из ejs включает в себя все из найденных items 
+        res.render("list", {listTitle: foundList.name, newListItems: foundItems})
+      }
+    }
+  }
+);
 });
 
+// Не помню зачем
 app.get("/about", function(req, res)
 {
   res.render("about");
