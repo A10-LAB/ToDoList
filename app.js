@@ -78,16 +78,31 @@ app.get("/", function(req, res)
 app.post("/", function(req, res)
 {
   const itemName = req.body.newItem;
-  
+  const listName = req.body.list;
+    
   // Post DB Document based on req.body
   const item = new Item 
   ({
     name: itemName
-}); 
-// Mongoose короткий метод сохранения
-item.save();
-// Redirection to root to show new post иначе не сработает
-res.redirect("/"); 
+  });
+
+  // Проверка на то, является ли это root страницей или новая созданная. Если root то старая схема работа (внутри if), сохраняется только новый item. Если нет - поиск по базе данных через метод mongoose и добавление в нее нового item и также сохранение после этого и редирект на соответствующую страницу 
+  if (listName === "Today")
+  {
+    // Mongoose короткий метод сохранения
+    item.save();
+    // Redirection to root to show new post иначе не сработает
+    res.redirect("/");
+  }
+  else
+  {
+    List.findOne({name: listName}, function(err, foundList)
+    {
+      foundList.items.push(item);
+      foundList.save();
+      res.redirect("/" + listName);
+    });
+  }
 });
 
 // Deleted Page 
@@ -136,7 +151,7 @@ app.get("/:customListName", function(req,res)
         // название страницы в качестве заголовка (listTitle) и меняет его 
         // на найденное имя через метод foundList,
         // NewListItems из ejs включает в себя все из найденных items 
-        res.render("list", {listTitle: foundList.name, newListItems: foundItems})
+        res.render("list", {listTitle: foundList.name, newListItems: foundList.items})
       }
     }
   }
