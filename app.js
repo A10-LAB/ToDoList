@@ -106,24 +106,27 @@ app.post("/", function(req, res)
 });
 
 // Deleted Page 
-app.post("/delete", function(req, res)
-{
-  const checkedItemID = req.body.checkbox;
-
-Item.findByIdAndRemove(checkedItemID, function(err)
-{
-  if (!err)
-  {
-    console.log("Deleted item by ID completed");
-    res.redirect("/");
+app.post("/delete", function(req, res){
+  const checkedItemId = req.body.checkbox;
+  
+  // Добавление проверки имени listName из спрятанного инпута в list.ejs, 
+  const listName = req.body.listName;
+  
+  // Проверка из какой страницы идет название listName
+  if (listName === "Today"){
+  Item.findByIdAndRemove(checkedItemId, function(err){ 
+  if (!err) {console.log("Sucessfully deleted checked item.");
+      res.redirect("/");
   }
-  else
-  {
-    console.log(err);
+  });
+  } else {
+    List.findOneAndUpdate({name: listName}, {$pull: {items: {_id:checkedItemId}}},function(err, foundList){
+      if(!err){
+        res.redirect("/" + listName);
+      }
+    });
   }
-});  
 });
-
 // Проверка если страница существует
 app.get("/:customListName", function(req,res)
 {
