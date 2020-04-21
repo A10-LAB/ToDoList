@@ -15,7 +15,7 @@ app.use(express.static("public"));
 // ******* Mongo Database
 
 // DB Connection
-mongoose.connect("mongodb://localhost:27017/todolistDB", { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect("mongodb+srv://admin-alexey:test131313@a-10todolist-nvdwy.mongodb.net/todolistDB", { useNewUrlParser: true, useUnifiedTopology: true });
 
 // DB Schemes
 const itemSchema = 
@@ -168,8 +168,14 @@ app.get("/about", function(req, res)
   res.render("about");
 });
 
+// ******* Code for Heroku Ports
+let port = process.env.PORT;
+if (port == null || port == "") {
+  port = 3000;
+}
+
 // ******* Listen for Console
-app.listen(3000, function() 
+app.listen(port, function() 
 {
-  console.log("/// Server started on port 3000 ///");
+  console.log("/// Server started ///");
 });
